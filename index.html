@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#000000" />
+    <title>Progresivna web-aplikacija</title>
+    <link rel="icon" type="image/x-icon" href="/icons/favicon.ico" />
+    <link rel="manifest" href="./manifest.json" />
+  </head>
+  <body>
+    <h1>Progresivna web-aplikacija</h1>
+    <button id="cameraButton">Snimi fotografiju</button>
+    <button id="stopCameraButton">Zaustavi kameru</button>
+    <video id="video" autoplay></video>
+    <canvas id="canvas" style="display: none"></canvas>
+
+    <script>
+      if ("serviceWorker" in navigator) {
+        window.addEventListener("load", function () {
+          navigator.serviceWorker.register("/sw.js").then(
+            function (registration) {
+              // Registration was successful
+              console.log(
+                "ServiceWorker registration successful with scope: ",
+                registration.scope
+              );
+            },
+            function (err) {
+              // registration failed :(
+              console.log("ServiceWorker registration failed: ", err);
+            }
+          );
+        });
+      }
+
+      const video = document.getElementById("video");
+      const canvas = document.getElementById("canvas");
+      const context = canvas.getContext("2d");
+
+      document
+        .getElementById("cameraButton")
+        .addEventListener("click", async () => {
+          try {
+            const stream = await navigator.mediaDevices.getUserMedia({
+              video: true,
+            });
+            video.srcObject = stream;
+
+            // Wait for the video stream to load enough to play
+            await new Promise((resolve) => (video.oncanplay = resolve));
+
+            // Draw the current frame onto the canvas
+            context.drawImage(video, 0, 0, video.videoWidth, video.videoHeight);
+          } catch (error) {
+            console.error("Greška prilikom pristupa kameri:", error);
+          }
+        });
+
+      document
+        .getElementById("stopCameraButton")
+        .addEventListener("click", async () => {
+          try {
+            // Stop all video tracks
+            video.srcObject.getVideoTracks().forEach((track) => track.stop());
+          } catch (error) {
+            console.error("Greška prilikom zaustavljanja kamere:", error);
+          }
+        });
+    </script>
+  </body>
+</html>
