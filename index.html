@@ -10,13 +10,29 @@
     <link rel="manifest" href="./manifest.json" />
   </head>
   <body>
+    <a href="otherSite.html"><button>Go to Other Site</button></a>
     <h1>Progresivna web-aplikacija</h1>
     <button id="cameraButton">Snimi fotografiju</button>
     <button id="stopCameraButton">Zaustavi kameru</button>
     <video id="video" autoplay></video>
     <canvas id="canvas" style="display: none"></canvas>
+    <button id="notificationButton">Send Notification</button>
+    <button id="syncButton">Sync</button>
 
     <script>
+      document
+        .getElementById("notificationButton")
+        .addEventListener("click", async () => {
+          let res = await fetch("/test", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Accept: "application/json",
+            },
+            body: JSON.stringify({ message: "Test poruka" }),
+          });
+        });
+
       if ("serviceWorker" in navigator) {
         window.addEventListener("load", function () {
           navigator.serviceWorker.register("/sw.js").then(
@@ -48,10 +64,8 @@
             });
             video.srcObject = stream;
 
-            // Wait for the video stream to load enough to play
             await new Promise((resolve) => (video.oncanplay = resolve));
 
-            // Draw the current frame onto the canvas
             context.drawImage(video, 0, 0, video.videoWidth, video.videoHeight);
           } catch (error) {
             console.error("Greška prilikom pristupa kameri:", error);
@@ -68,6 +82,19 @@
             console.error("Greška prilikom zaustavljanja kamere:", error);
           }
         });
+
+      async function setupSync() {
+        const syncButton = document.getElementById("syncButton");
+        const registration = await navigator.serviceWorker.getRegistration();
+
+        if ("sync" in registration) {
+          syncButton.addEventListener("click", async () => {
+            await registration.sync.register("mySync");
+          });
+        }
+      }
+      setupSync();
     </script>
+    <script src="push.js"></script>
   </body>
 </html>
